@@ -18,9 +18,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+const VERSION = "0.0.1"
+
 var rootCmd = &cobra.Command{
 	Use:     "dbm",
-	Version: "0.0.1",
+	Version: VERSION,
 	Short:   "dbm is a database monitoring tool",
 }
 

@@ -10,6 +10,8 @@ version: 1
 
 before:
   hooks:
+    # Update the version based on the tag
+    - sed -i 's/const VERSION = ".*"/const VERSION = "{{ .Version }}"/' cmd/main.go
     # You may remove this if you don't use go modules.
     - go mod tidy
     # you may remove this if you don't need go generate
