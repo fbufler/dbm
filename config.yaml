@@ -1,0 +1,17 @@
+logfile: test.log
+debug: true
+test_timeout: 5
+test_interval: 30
+databases:
+  - host: localhost
+    port: 5432
+    username: postgres
+    password: postgres
+    database: postgres
+    connection_timeout: 5
+  - host: localhost
+    port: 5433
+    username: postgres
+    password: postgres
+    database: postgres
+    connection_timeout: 5
