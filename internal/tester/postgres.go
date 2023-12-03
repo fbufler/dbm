@@ -59,6 +59,11 @@ func (p *Postgres) runDatabaseTest(db database.Database, ctx context.Context) {
 	}
 	connectionTime := time.Now()
 	err := db.Connect()
+	select {
+	case <-ctx.Done():
+		return
+	default:
+	}
 	if err != nil {
 		log.Error().Msgf("connecting to %s: %s", result.Database, err)
 		p.results <- result
@@ -69,6 +74,11 @@ func (p *Postgres) runDatabaseTest(db database.Database, ctx context.Context) {
 	result.Connectable = true
 	readTime := time.Now()
 	err = db.TestRead(ctx)
+	select {
+	case <-ctx.Done():
+		return
+	default:
+	}
 	if err != nil {
 		log.Error().Msgf("reading from %s: %s", result.Database, err)
 		p.results <- result
@@ -78,6 +88,11 @@ func (p *Postgres) runDatabaseTest(db database.Database, ctx context.Context) {
 	result.Readable = true
 	writeTime := time.Now()
 	err = db.TestWrite(ctx)
+	select {
+	case <-ctx.Done():
+		return
+	default:
+	}
 	if err != nil {
 		log.Error().Msgf("writing to %s: %s", result.Database, err)
 		p.results <- result
@@ -85,7 +100,12 @@ func (p *Postgres) runDatabaseTest(db database.Database, ctx context.Context) {
 	}
 	result.WriteTime = time.Since(writeTime)
 	result.Writable = true
-	p.results <- result
+	select {
+	case <-ctx.Done():
+		return
+	default:
+		p.results <- result
+	}
 }
 
 func (p *Postgres) Setup(ctx context.Context) error {

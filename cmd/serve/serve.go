@@ -1,6 +1,8 @@
 package serve
 
 import (
+	"context"
+
 	"github.com/fbufler/database-monitor/internal/service"
 	"github.com/fbufler/database-monitor/internal/tester"
 	"github.com/fbufler/database-monitor/pkg/database"
@@ -22,7 +24,7 @@ func ServeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Run dbm database tester service",
-		RunE:  serve,
+		RunE:  serveRun,
 	}
 	cmd.Flags().StringSlice("databases", []string{}, "databases to test")
 	cmd.Flags().Int("test_timeout", 5, "test timeout in seconds")
@@ -37,8 +39,7 @@ func ServeCommand() *cobra.Command {
 	return cmd
 }
 
-func serve(cmd *cobra.Command, args []string) error {
-	log.Info().Msg("Starting local")
+func serveRun(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 	serveCfg := ServeCfg{}
 	err := viper.Unmarshal(&serveCfg)
@@ -50,23 +51,29 @@ func serve(cmd *cobra.Command, args []string) error {
 	if testTimeout > 0 {
 		serveCfg.TestTimeout = testTimeout
 	}
+	return serve(&serveCfg, ctx)
+}
+
+func serve(cfg *ServeCfg, ctx context.Context) error {
+	log.Info().Msg("Starting local")
+
 	log.Debug().Msg("Initializing database tester")
 	dbs := []database.Database{}
-	for _, dbCfg := range serveCfg.Databases {
+	for _, dbCfg := range cfg.Databases {
 		dbs = append(dbs, database.NewPostgres(dbCfg))
 	}
 	tester := tester.NewPostgres(tester.Config{
 		Databases:    dbs,
-		TestTimeout:  serveCfg.TestTimeout,
-		TestInterval: serveCfg.TestInterval,
+		TestTimeout:  cfg.TestTimeout,
+		TestInterval: cfg.TestInterval,
 	})
 	log.Info().Msg("Starting database tester")
 	result := tester.Run(ctx)
 	log.Info().Msg("Initializing service")
 	router := mux.NewRouter()
 	service := service.New(service.Config{
-		Port:             serveCfg.Port,
-		InvalidationTime: serveCfg.InvalidationTime,
+		Port:             cfg.Port,
+		InvalidationTime: cfg.InvalidationTime,
 	}, result, router)
 	log.Info().Msg("Starting service")
 	go service.Run(ctx)

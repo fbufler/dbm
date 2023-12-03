@@ -1,6 +1,8 @@
 package local
 
 import (
+	"context"
+
 	"github.com/fbufler/database-monitor/internal/tester"
 	"github.com/fbufler/database-monitor/pkg/database"
 	"github.com/rs/zerolog/log"
@@ -18,7 +20,7 @@ func LocalCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "local",
 		Short: "Run dbm database tester",
-		RunE:  local,
+		RunE:  localRun,
 	}
 	cmd.Flags().StringSlice("databases", []string{}, "databases to test")
 	cmd.Flags().Int("test_timeout", 5, "test timeout in seconds")
@@ -27,8 +29,7 @@ func LocalCommand() *cobra.Command {
 	return cmd
 }
 
-func local(cmd *cobra.Command, args []string) error {
-	log.Info().Msg("Starting local")
+func localRun(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 	LocalCfg := LocalCfg{}
 	err := viper.Unmarshal(&LocalCfg)
@@ -40,15 +41,21 @@ func local(cmd *cobra.Command, args []string) error {
 	if testTimeout > 0 {
 		LocalCfg.TestTimeout = testTimeout
 	}
+	return local(&LocalCfg, ctx)
+}
+
+func local(cfg *LocalCfg, ctx context.Context) error {
+	log.Info().Msg("Starting local")
+
 	log.Debug().Msg("Initializing database tester")
 	dbs := []database.Database{}
-	for _, dbCfg := range LocalCfg.Databases {
+	for _, dbCfg := range cfg.Databases {
 		dbs = append(dbs, database.NewPostgres(dbCfg))
 	}
 	tester := tester.NewPostgres(tester.Config{
 		Databases:    dbs,
-		TestTimeout:  LocalCfg.TestTimeout,
-		TestInterval: LocalCfg.TestInterval,
+		TestTimeout:  cfg.TestTimeout,
+		TestInterval: cfg.TestInterval,
 	})
 	log.Info().Msg("Starting database tester")
 	result := tester.Run(ctx)

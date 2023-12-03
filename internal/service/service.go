@@ -75,7 +75,9 @@ func (s *ServiceImpl) Run(ctx context.Context) {
 	log.Info().Msgf("Starting service on port %d", s.config.Port)
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			log.Fatal().Msgf("service: %s", err)
+			if err != http.ErrServerClosed {
+				log.Fatal().Msgf("service: %s", err)
+			}
 		}
 	}()
 	<-ctx.Done()

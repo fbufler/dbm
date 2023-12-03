@@ -1,0 +1,33 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+      - name: Tests with Coverage
+        run: |
+          go test -v -coverprofile=coverage.out.tmp ./...
+          cat coverage.out.tmp | grep -v "_mock.go" > coverage.out
+          go tool cover -func=coverage.out
+          go tool cover -html=coverage.out -o coverage.html
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage
+          path: coverage.html

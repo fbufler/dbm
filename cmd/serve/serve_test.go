@@ -1,8 +1,9 @@
-package local
+package serve
 
 import (
 	"bytes"
 	"context"
+	"net/http"
 	"testing"
 	"time"
 
@@ -11,10 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Integration test for the local service.
-
-func TestLocal(t *testing.T) {
-	cfg := LocalCfg{
+func TestServe(t *testing.T) {
+	cfg := ServeCfg{
+		Port:             8081,
+		InvalidationTime: 5,
+		TestTimeout:      1,
+		TestInterval:     1,
 		Databases: []database.Config{
 			{
 				Host:     "localhost",
@@ -24,19 +27,16 @@ func TestLocal(t *testing.T) {
 				Database: "postgres",
 			},
 		},
-		TestTimeout:  1,
-		TestInterval: 1,
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	var buf bytes.Buffer
 	log.Logger = log.Output(&buf)
-	go local(&cfg, ctx)
+	go serve(&cfg, ctx)
 	time.Sleep(1 * time.Second)
+	res, err := http.Get("http://localhost:8081/results")
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode)
 	cancel()
-	time.Sleep(1 * time.Second)
-
-	bufS := buf.String()
-	assert.Contains(t, bufS, "Starting local")
-	assert.Contains(t, bufS, "Result: {Database:localhost:5432/postgres")
-	assert.Contains(t, bufS, "Context terminated")
+	_, err = http.Get("http://localhost:8081/results")
+	assert.Error(t, err)
 }
