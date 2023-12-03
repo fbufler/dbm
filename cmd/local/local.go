@@ -41,8 +41,12 @@ func local(cmd *cobra.Command, args []string) error {
 		LocalCfg.TestTimeout = testTimeout
 	}
 	log.Debug().Msg("Initializing database tester")
+	dbs := []database.Database{}
+	for _, dbCfg := range LocalCfg.Databases {
+		dbs = append(dbs, database.NewPostgres(dbCfg))
+	}
 	tester := tester.NewPostgres(tester.Config{
-		Databases:    LocalCfg.Databases,
+		Databases:    dbs,
 		TestTimeout:  LocalCfg.TestTimeout,
 		TestInterval: LocalCfg.TestInterval,
 	})

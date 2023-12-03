@@ -13,9 +13,9 @@ type Tester interface {
 }
 
 type Config struct {
-	Databases    []database.Config `mapstructure:"databases"`
-	TestTimeout  int               `mapstructure:"test_timeout"`
-	TestInterval int               `mapstructure:"test_interval"`
+	Databases    []database.Database `mapstructure:"databases"`
+	TestTimeout  int                 `mapstructure:"test_timeout"`
+	TestInterval int                 `mapstructure:"test_interval"`
 }
 
 type Result struct {

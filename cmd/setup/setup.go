@@ -33,8 +33,12 @@ func setup(cmd *cobra.Command, args []string) error {
 	}
 	log.Debug().Msgf("LocalCfg: %+v", LocalCfg)
 	log.Debug().Msg("Initializing database tester")
+	dbs := []database.Database{}
+	for _, dbCfg := range LocalCfg.Databases {
+		dbs = append(dbs, database.NewPostgres(dbCfg))
+	}
 	tester := tester.NewPostgres(tester.Config{
-		Databases: LocalCfg.Databases,
+		Databases: dbs,
 	})
 	log.Info().Msg("Setup tester")
 	err = tester.Setup(ctx)

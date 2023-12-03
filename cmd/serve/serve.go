@@ -51,8 +51,12 @@ func serve(cmd *cobra.Command, args []string) error {
 		serveCfg.TestTimeout = testTimeout
 	}
 	log.Debug().Msg("Initializing database tester")
+	dbs := []database.Database{}
+	for _, dbCfg := range serveCfg.Databases {
+		dbs = append(dbs, database.NewPostgres(dbCfg))
+	}
 	tester := tester.NewPostgres(tester.Config{
-		Databases:    serveCfg.Databases,
+		Databases:    dbs,
 		TestTimeout:  serveCfg.TestTimeout,
 		TestInterval: serveCfg.TestInterval,
 	})
