@@ -9,24 +9,24 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Postgres struct {
+type TesterImpl struct {
 	results chan Result
 	config  Config
 }
 
-func NewPostgres(config Config) Tester {
-	return &Postgres{
+func New(config Config) Tester {
+	return &TesterImpl{
 		results: make(chan Result),
 		config:  config,
 	}
 }
 
-func (p *Postgres) Run(ctx context.Context) chan Result {
+func (p *TesterImpl) Run(ctx context.Context) chan Result {
 	go p.run(ctx)
 	return p.results
 }
 
-func (p *Postgres) run(ctx context.Context) {
+func (p *TesterImpl) run(ctx context.Context) {
 	log.Info().Msg("Starting postgres tester")
 	log.Debug().Msg("Starting database tests")
 	for {
@@ -49,7 +49,7 @@ func (p *Postgres) run(ctx context.Context) {
 	}
 }
 
-func (p *Postgres) runDatabaseTest(db database.Database, ctx context.Context) {
+func (p *TesterImpl) runDatabaseTest(db database.Database, ctx context.Context) {
 	result := Result{
 		Database:    db.Identifier(),
 		Connectable: false,
@@ -108,7 +108,7 @@ func (p *Postgres) runDatabaseTest(db database.Database, ctx context.Context) {
 	}
 }
 
-func (p *Postgres) Setup(ctx context.Context) error {
+func (p *TesterImpl) Setup(ctx context.Context) error {
 	var setupErrors []error
 	for _, db := range p.config.Databases {
 		err := db.SetupTestTable(ctx)

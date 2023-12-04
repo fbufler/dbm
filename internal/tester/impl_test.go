@@ -16,7 +16,7 @@ func TestSetup(t *testing.T) {
 	defer ctrl.Finish()
 	mockDatabase := database.NewMockDatabase(ctrl)
 	ctx := context.Background()
-	postgresTester := NewPostgres(Config{
+	postgresTester := New(Config{
 		Databases: []database.Database{
 			mockDatabase,
 		},
@@ -33,7 +33,7 @@ func TestSetupError(t *testing.T) {
 	defer ctrl.Finish()
 	mockDatabase := database.NewMockDatabase(ctrl)
 	ctx := context.Background()
-	postgresTester := NewPostgres(Config{
+	postgresTester := New(Config{
 		Databases: []database.Database{
 			mockDatabase,
 		},
@@ -49,7 +49,7 @@ func TestRun(t *testing.T) {
 	defer ctrl.Finish()
 	mockDatabase := database.NewMockDatabase(ctrl)
 	ctx, cancel := context.WithCancel(context.Background())
-	postgresTester := NewPostgres(Config{
+	postgresTester := New(Config{
 		TestTimeout:  1,
 		TestInterval: 1,
 		Databases: []database.Database{
@@ -62,7 +62,7 @@ func TestRun(t *testing.T) {
 	mockDatabase.EXPECT().TestWrite(ctx).Return(nil)
 	mockDatabase.EXPECT().Close().Return(nil)
 	go postgresTester.Run(ctx)
-	result := <-postgresTester.(*Postgres).results
+	result := <-postgresTester.(*TesterImpl).results
 	cancel()
 	assert.Equal(t, "test", result.Database)
 	assert.Equal(t, true, result.Connectable)
@@ -75,7 +75,7 @@ func TestRunDatabaseTest(t *testing.T) {
 	defer ctrl.Finish()
 	mockDatabase := database.NewMockDatabase(ctrl)
 	ctx, cancel := context.WithCancel(context.Background())
-	postgresTester := NewPostgres(Config{
+	postgresTester := New(Config{
 		TestTimeout:  1,
 		TestInterval: 1,
 		Databases: []database.Database{
@@ -87,8 +87,8 @@ func TestRunDatabaseTest(t *testing.T) {
 	mockDatabase.EXPECT().TestRead(ctx).Return(nil)
 	mockDatabase.EXPECT().TestWrite(ctx).Return(nil)
 	mockDatabase.EXPECT().Close().Return(nil)
-	go postgresTester.(*Postgres).runDatabaseTest(mockDatabase, ctx)
-	result := <-postgresTester.(*Postgres).results
+	go postgresTester.(*TesterImpl).runDatabaseTest(mockDatabase, ctx)
+	result := <-postgresTester.(*TesterImpl).results
 	cancel()
 	assert.Equal(t, "test", result.Database)
 	assert.Equal(t, true, result.Connectable)
@@ -101,7 +101,7 @@ func TestRunDatabaseTestConnectError(t *testing.T) {
 	defer ctrl.Finish()
 	mockDatabase := database.NewMockDatabase(ctrl)
 	ctx, cancel := context.WithCancel(context.Background())
-	postgresTester := NewPostgres(Config{
+	postgresTester := New(Config{
 		TestTimeout:  1,
 		TestInterval: 1,
 		Databases: []database.Database{
@@ -110,8 +110,8 @@ func TestRunDatabaseTestConnectError(t *testing.T) {
 	})
 	mockDatabase.EXPECT().Identifier().Return("test")
 	mockDatabase.EXPECT().Connect().Return(errors.New("Connect error"))
-	go postgresTester.(*Postgres).runDatabaseTest(mockDatabase, ctx)
-	result := <-postgresTester.(*Postgres).results
+	go postgresTester.(*TesterImpl).runDatabaseTest(mockDatabase, ctx)
+	result := <-postgresTester.(*TesterImpl).results
 	cancel()
 	assert.Equal(t, "test", result.Database)
 	assert.Equal(t, false, result.Connectable)
@@ -124,7 +124,7 @@ func TestRunDatabaseTestReadError(t *testing.T) {
 	defer ctrl.Finish()
 	mockDatabase := database.NewMockDatabase(ctrl)
 	ctx, cancel := context.WithCancel(context.Background())
-	postgresTester := NewPostgres(Config{
+	postgresTester := New(Config{
 		TestTimeout:  1,
 		TestInterval: 1,
 		Databases: []database.Database{
@@ -135,8 +135,8 @@ func TestRunDatabaseTestReadError(t *testing.T) {
 	mockDatabase.EXPECT().Connect().Return(nil)
 	mockDatabase.EXPECT().TestRead(ctx).Return(errors.New("Read error"))
 	mockDatabase.EXPECT().Close().Return(nil)
-	go postgresTester.(*Postgres).runDatabaseTest(mockDatabase, ctx)
-	result := <-postgresTester.(*Postgres).results
+	go postgresTester.(*TesterImpl).runDatabaseTest(mockDatabase, ctx)
+	result := <-postgresTester.(*TesterImpl).results
 	cancel()
 	assert.Equal(t, "test", result.Database)
 	assert.Equal(t, true, result.Connectable)
@@ -149,7 +149,7 @@ func TestRunDatabaseTestWriteError(t *testing.T) {
 	defer ctrl.Finish()
 	mockDatabase := database.NewMockDatabase(ctrl)
 	ctx, cancel := context.WithCancel(context.Background())
-	postgresTester := NewPostgres(Config{
+	postgresTester := New(Config{
 		TestTimeout:  1,
 		TestInterval: 1,
 		Databases: []database.Database{
@@ -161,8 +161,8 @@ func TestRunDatabaseTestWriteError(t *testing.T) {
 	mockDatabase.EXPECT().TestRead(ctx).Return(nil)
 	mockDatabase.EXPECT().TestWrite(ctx).Return(errors.New("Write error"))
 	mockDatabase.EXPECT().Close().Return(nil)
-	go postgresTester.(*Postgres).runDatabaseTest(mockDatabase, ctx)
-	result := <-postgresTester.(*Postgres).results
+	go postgresTester.(*TesterImpl).runDatabaseTest(mockDatabase, ctx)
+	result := <-postgresTester.(*TesterImpl).results
 	cancel()
 	assert.Equal(t, "test", result.Database)
 	assert.Equal(t, true, result.Connectable)

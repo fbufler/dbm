@@ -62,7 +62,7 @@ func serve(cfg *ServeCfg, ctx context.Context) error {
 	for _, dbCfg := range cfg.Databases {
 		dbs = append(dbs, database.NewPostgres(dbCfg))
 	}
-	tester := tester.NewPostgres(tester.Config{
+	tester := tester.New(tester.Config{
 		Databases:    dbs,
 		TestTimeout:  cfg.TestTimeout,
 		TestInterval: cfg.TestInterval,
