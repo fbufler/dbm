@@ -14,6 +14,7 @@ import (
 
 type ServeCfg struct {
 	Databases        []database.Config `mapstructure:"databases"`
+	DatabaseType     string            `mapstructure:"database_type"`
 	TestTimeout      int               `mapstructure:"test_timeout"`
 	TestInterval     int               `mapstructure:"test_interval"`
 	Port             int               `mapstructure:"port"`
@@ -27,11 +28,13 @@ func ServeCommand() *cobra.Command {
 		RunE:  serveRun,
 	}
 	cmd.Flags().StringSlice("databases", []string{}, "databases to test")
+	cmd.Flags().String("database_type", "postgres", "database type to test")
 	cmd.Flags().Int("test_timeout", 5, "test timeout in seconds")
 	cmd.Flags().Int("test_interval", 5, "test interval in seconds")
 	cmd.Flags().Int("port", 8080, "service port")
 	cmd.Flags().Int("invalidation_time", 5, "invalidation time in seconds")
 	viper.BindPFlag("databases", cmd.Flags().Lookup("databases"))
+	viper.BindPFlag("database_type", cmd.Flags().Lookup("database_type"))
 	viper.BindPFlag("test_timeout", cmd.Flags().Lookup("test_timeout"))
 	viper.BindPFlag("test_interval", cmd.Flags().Lookup("test_interval"))
 	viper.BindPFlag("port", cmd.Flags().Lookup("port"))
@@ -60,7 +63,14 @@ func serve(cfg *ServeCfg, ctx context.Context) error {
 	log.Debug().Msg("Initializing database tester")
 	dbs := []database.Database{}
 	for _, dbCfg := range cfg.Databases {
-		dbs = append(dbs, database.NewPostgres(dbCfg))
+		switch cfg.DatabaseType {
+		case "sqlite":
+			log.Debug().Msg("Using sqlite")
+			dbs = append(dbs, database.NewSQLite(dbCfg))
+		case "postgres":
+			log.Debug().Msg("Using postgres")
+			dbs = append(dbs, database.NewPostgres(dbCfg))
+		}
 	}
 	tester := tester.New(tester.Config{
 		Databases:    dbs,

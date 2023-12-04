@@ -2,6 +2,7 @@ logfile: test.log
 debug: true
 test_timeout: 5
 test_interval: 30
+database_type: sqlite
 databases:
   - host: localhost
     port: 5432
@@ -9,9 +10,11 @@ databases:
     password: postgres
     database: postgres
     connection_timeout: 5
+    file_path: test1.sql
   - host: localhost
     port: 5433
     username: postgres
     password: postgres
     database: postgres
     connection_timeout: 5
+    file_path: test2.sql

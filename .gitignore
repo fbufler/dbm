@@ -1,3 +1,5 @@
 test.log
 dist/
 coverage.*
+*.sql
+.envrc

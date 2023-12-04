@@ -3,6 +3,7 @@ package database
 import "context"
 
 type Config struct {
+	FilePath          string `mapstructure:"file_path"`
 	Host              string `mapstructure:"host"`
 	Port              int    `mapstructure:"port"`
 	Username          string `mapstructure:"username"`

@@ -11,7 +11,8 @@ import (
 )
 
 type SetupCfg struct {
-	Databases []database.Config `mapstructure:"databases"`
+	Databases    []database.Config `mapstructure:"databases"`
+	DatabaseType string            `mapstructure:"database_type"`
 }
 
 func SetupCommand() *cobra.Command {
@@ -21,7 +22,9 @@ func SetupCommand() *cobra.Command {
 		RunE:  runSetup,
 	}
 	cmd.Flags().StringSlice("databases", []string{}, "databases to test")
+	cmd.Flags().String("database_type", "postgres", "database type to test")
 	viper.BindPFlag("databases", cmd.Flags().Lookup("databases"))
+	viper.BindPFlag("database_type", cmd.Flags().Lookup("database_type"))
 	return cmd
 }
 
@@ -41,7 +44,14 @@ func setup(cfg *SetupCfg, ctx context.Context) error {
 	log.Debug().Msg("Initializing database tester")
 	dbs := []database.Database{}
 	for _, dbCfg := range cfg.Databases {
-		dbs = append(dbs, database.NewPostgres(dbCfg))
+		switch cfg.DatabaseType {
+		case "sqlite":
+			log.Debug().Msg("Using sqlite")
+			dbs = append(dbs, database.NewSQLite(dbCfg))
+		case "postgres":
+			log.Debug().Msg("Using postgres")
+			dbs = append(dbs, database.NewPostgres(dbCfg))
+		}
 	}
 	tester := tester.New(tester.Config{
 		Databases: dbs,
