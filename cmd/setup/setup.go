@@ -37,10 +37,10 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	log.Debug().Msgf("SetupCfg: %+v", SetupCfg)
-	return setup(&SetupCfg, ctx)
+	return Setup(&SetupCfg, ctx)
 }
 
-func setup(cfg *SetupCfg, ctx context.Context) error {
+func Setup(cfg *SetupCfg, ctx context.Context) error {
 	log.Debug().Msg("Initializing database tester")
 	dbs := []database.Database{}
 	for _, dbCfg := range cfg.Databases {

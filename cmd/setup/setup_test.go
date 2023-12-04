@@ -2,6 +2,7 @@ package setup
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/fbufler/database-monitor/pkg/database"
@@ -11,19 +12,16 @@ func TestSetup(t *testing.T) {
 	cfg := SetupCfg{
 		Databases: []database.Config{
 			{
-				Host:     "localhost",
-				Port:     5432,
-				Username: "postgres",
-				Password: "postgres",
-				Database: "postgres",
+				FilePath: "test.db",
 			},
 		},
+		DatabaseType: "sqlite",
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	err := setup(&cfg, ctx)
+	err := Setup(&cfg, ctx)
 	if err != nil {
-		//TODO fix this if sqlite is available
-		t.Skip(err)
+		t.Errorf("Setup failed: %s", err)
 	}
 	cancel()
+	os.Remove("test.db")
 }

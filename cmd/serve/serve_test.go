@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/fbufler/database-monitor/cmd/setup"
 	"github.com/fbufler/database-monitor/pkg/database"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
@@ -20,17 +22,18 @@ func TestServe(t *testing.T) {
 		TestInterval:     1,
 		Databases: []database.Config{
 			{
-				Host:     "localhost",
-				Port:     5432,
-				Username: "postgres",
-				Password: "postgres",
-				Database: "postgres",
+				FilePath: "test.db",
 			},
 		},
+		DatabaseType: "sqlite",
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	var buf bytes.Buffer
 	log.Logger = log.Output(&buf)
+	setup.Setup(&setup.SetupCfg{
+		Databases:    cfg.Databases,
+		DatabaseType: cfg.DatabaseType,
+	}, ctx)
 	go serve(&cfg, ctx)
 	time.Sleep(1 * time.Second)
 	res, err := http.Get("http://localhost:8081/results")
@@ -39,4 +42,5 @@ func TestServe(t *testing.T) {
 	cancel()
 	_, err = http.Get("http://localhost:8081/results")
 	assert.Error(t, err)
+	os.Remove("test.db")
 }
